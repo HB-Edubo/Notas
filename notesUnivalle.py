@@ -46,7 +46,7 @@ def abrir_chrome():
     try:
         subprocess.Popen(comando, shell=True)
         ventana.after(2000, lambda: progressbar.set(0.33))
-        messagebox.showinfo("Éxito", "Chrome se abrió correctamente.")
+        #messagebox.showinfo("Éxito", "Chrome se abrió correctamente.")
     except Exception as e:
         messagebox.showerror("Error", f"No se pudo abrir Chrome:\n{e}")
 
@@ -264,6 +264,26 @@ def ventana_codigo_verificacion():
     btn_verificar.pack(pady=5)
 
 
+def verificar_conexion_periodica():
+    conectado = hay_internet()
+
+    # Ruta dinámica
+    icono_path = os.path.join(os.path.dirname(__file__), "images", "con-internet.png" if conectado else "sin-internet.png")
+    nueva_img = ctk.CTkImage(light_image=Image.open(icono_path).resize((25, 25), resample=Image.LANCZOS))
+
+    # Actualizar ícono
+    internet_label.configure(image=nueva_img)
+    internet_label.image = nueva_img
+
+    # Habilitar o deshabilitar botón
+    if conectado:
+        btn3.configure(state="normal", fg_color="#434343", hover_color="#232323")
+    else:
+        btn3.configure(state="disabled", fg_color="#999999", hover_color="#999999")
+
+    # Repetir cada 5 segundos
+    ventana.after(5000, verificar_conexion_periodica)
+
 
 # Ventana principal
 ventana = ctk.CTk()
@@ -343,10 +363,6 @@ btn3 = ctk.CTkButton(
 )
 btn3.grid(row=3, column=0, pady=10)
 
-if not hay_internet():
-    btn3.configure(state="disabled", fg_color="#999999", hover_color="#999999")
-
-
 action_frame = ctk.CTkFrame(ventana, fg_color="#cc0605")
 action_frame.pack(fill="x", side="bottom", pady=(2, 5))
 progressbar = ctk.CTkProgressBar(action_frame, orientation="horizontal", width=350, progress_color="#ffffff")
@@ -374,7 +390,7 @@ key_button.place(relx=1.0, x=-20, y=10, anchor="ne")  # esquina superior derecha
 
 # Ícono de conexión a internet
 internet_icon_path = os.path.join(os.path.dirname(__file__), "images", "con-internet.png" if hay_internet() else "sin-internet.png")
-internet_icon_img = Image.open(internet_icon_path).resize((25, 25), resample=Image.LANCZOS)
+internet_icon_img = Image.open(internet_icon_path).resize((7, 10), resample=Image.LANCZOS)
 internet_photo = ctk.CTkImage(light_image=internet_icon_img)
 
 internet_label = ctk.CTkLabel(
@@ -386,5 +402,5 @@ internet_label.image = internet_photo
 internet_label.place(relx=1.0, x=-60, y=7, anchor="ne")  # al lado izquierdo del botón llave
 
 
-
+verificar_conexion_periodica()
 ventana.mainloop()
