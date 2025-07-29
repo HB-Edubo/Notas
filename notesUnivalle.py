@@ -8,6 +8,10 @@ from selenium.webdriver.common.by import By
 import os
 import time
 from PIL import Image, ImageTk
+import firebase_admin
+from firebase_admin import credentials, firestore
+import socket
+from PIL import Image
 
 # Configuración global de CustomTkinter
 ctk.set_appearance_mode("light")
@@ -16,6 +20,20 @@ ctk.set_default_color_theme("blue")
 excel_path = None
 logo_ref = None  # Mantener referencia al logo
 
+# Inicializar Firebase solo una vez
+if not firebase_admin._apps:
+    cred = credentials.Certificate("key.json")
+    firebase_admin.initialize_app(cred)
+
+db = firestore.client()
+
+def hay_internet():
+    try:
+        socket.create_connection(("8.8.8.8", 53), timeout=2)
+        return True
+    except OSError:
+        return False
+    
 # Funciones principales
 def abrir_chrome():
     ruta_chrome = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
@@ -105,6 +123,148 @@ def llenar_formulario():
     except Exception as e:
         messagebox.showerror("Error", f"Ocurrió un error:\n{e}")
 
+
+
+def validar_codigo():
+    from customtkinter import CTkInputDialog
+    dialog = CTkInputDialog(text="Ingresa tu código de acceso:", title="Verificación")
+    codigo = dialog.get_input()
+
+    if not codigo:
+        return
+
+    try:
+        doc_ref = db.collection("keys").document(codigo)
+        doc = doc_ref.get()
+        if doc.exists:
+            messagebox.showinfo("Éxito", "✅ Usuario aceptado")
+        else:
+            messagebox.showwarning("Código inválido", "❌ El código no está registrado.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Ocurrió un error al validar:\n{e}")
+
+
+
+def ventana_codigo_verificacion():
+    ventana_pin = ctk.CTkToplevel()
+    ventana_pin.title("Código de Verificación")
+    ventana_pin.geometry("380x300")
+    ventana_pin.resizable(False, False)
+    ventana_pin.configure(fg_color="#ffffff")
+
+    # Posicionar al costado derecho de la ventana principal
+    try:
+        ventana.update_idletasks()
+        main_x = ventana.winfo_x()
+        main_y = ventana.winfo_y()
+        main_w = ventana.winfo_width()
+        main_h = ventana.winfo_height()
+
+        # Posicionar la ventana nueva al costado derecho
+        nueva_x = main_x + main_w + 10
+        nueva_y = main_y + 50
+        ventana_pin.geometry(f"+{nueva_x}+{nueva_y}")
+    except Exception as e:
+        print(f"No se pudo posicionar al costado: {e}")
+
+
+    # Iconos: candado cerrado y abierto
+    closed_icon_img = Image.open(os.path.join(os.path.dirname(__file__), "images", "closed_key.png")).resize((70, 80))
+    open_icon_img = Image.open(os.path.join(os.path.dirname(__file__), "images", "open_key.png")).resize((70, 80))
+
+    closed_icon = ImageTk.PhotoImage(closed_icon_img)
+    open_icon = ImageTk.PhotoImage(open_icon_img)
+
+    # Mostrar icono inicial (cerrado)
+    icon_label = ctk.CTkLabel(ventana_pin, image=closed_icon, text="")
+    icon_label.image = closed_icon  # mantener referencia
+    icon_label.pack(pady=(20, 10))
+
+    # Título
+    titulo = ctk.CTkLabel(ventana_pin, text="Código de verificación", text_color="#000000", font=("Helvetica", 20, "bold"))
+    titulo.pack()
+
+    # Subtítulo
+    subtitulo = ctk.CTkLabel(ventana_pin, text="Por favor ingresa el código de 8 dígitos", text_color="#555555", font=("Helvetica", 14))
+    subtitulo.pack(pady=(0, 10))
+
+    # Cuadro de entrada dividido (8 dígitos)
+    entry_frame = ctk.CTkFrame(ventana_pin, fg_color="transparent")
+    entry_frame.pack(pady=10)
+
+    entries = []
+
+    def on_key(event, index):
+        char = event.char
+        key = event.keysym
+
+        if key == "BackSpace":
+            entries[index].delete(0, 'end')
+            if index > 0 and entries[index].get() == '':
+                entries[index - 1].focus()
+            return
+
+        if not char.isalnum() or len(char) != 1:
+            return "break"
+
+        entries[index].delete(0, 'end')
+        entries[index].insert(0, char)
+
+        if index < 7:
+            entries[index + 1].focus()
+
+        return "break"
+
+    for i in range(8):
+        e = ctk.CTkEntry(entry_frame, width=30, height=40, font=("Helvetica", 18), justify="center")
+        e.grid(row=0, column=i, padx=3)
+        e.bind("<Key>", lambda event, index=i: on_key(event, index))
+        entries.append(e)
+
+
+
+    # Mensaje dinámico
+    resultado_label = ctk.CTkLabel(ventana_pin, text="", font=("Helvetica", 14))
+    resultado_label.pack(pady=10)
+
+    # Función verificar
+    def verificar_codigo():
+        codigo = ''.join(entry.get() for entry in entries).strip()
+        if len(codigo) != 8:
+            resultado_label.configure(text="Debe ingresar los 8 dígitos", text_color="red")
+            return
+        try:
+            doc_ref = db.collection("keys").document(codigo)
+            doc = doc_ref.get()
+            if doc.exists:
+                # Actualizar el campo "activated" a True
+                doc_ref.update({"activated": True})
+                resultado_label.configure(text="✅ Usuario aceptado", text_color="green")
+
+                # Cambiar imagen a candado abierto
+                icon_label.configure(image=open_icon)
+                icon_label.image = open_icon  # actualizar referencia
+            else:
+                resultado_label.configure(text="❌ Código no válido", text_color="red")
+        except Exception as e:
+            resultado_label.configure(text=f"Error: {e}", text_color="red")
+
+    # Botón VERIFICAR
+    btn_verificar = ctk.CTkButton(
+        ventana_pin,
+        text="VERIFY",
+        font=("Helvetica", 14, "bold"),
+        fg_color="#cc0605",
+        hover_color="#a00404",
+        text_color="#ffffff",
+        width=160,
+        height=45,
+        command=verificar_codigo
+    )
+    btn_verificar.pack(pady=5)
+
+
+
 # Ventana principal
 ventana = ctk.CTk()
 ventana.title("Formulario Automático Universidad")
@@ -183,10 +343,48 @@ btn3 = ctk.CTkButton(
 )
 btn3.grid(row=3, column=0, pady=10)
 
+if not hay_internet():
+    btn3.configure(state="disabled", fg_color="#999999", hover_color="#999999")
+
+
 action_frame = ctk.CTkFrame(ventana, fg_color="#cc0605")
 action_frame.pack(fill="x", side="bottom", pady=(2, 5))
 progressbar = ctk.CTkProgressBar(action_frame, orientation="horizontal", width=350, progress_color="#ffffff")
 progressbar.pack(pady=5)
 progressbar.set(0)
+
+#Ventana de la key
+# Botón de acceso con imagen en la esquina superior derecha
+key_icon_path = os.path.join(os.path.dirname(__file__), "./images/key_icon.png")
+key_img = Image.open(key_icon_path).resize((25, 25), resample=Image.LANCZOS)
+key_photo = ImageTk.PhotoImage(key_img)
+
+key_button = ctk.CTkButton(
+    header_frame,
+    image=key_photo,
+    text="",
+    width=25,
+    height=25,
+    fg_color="transparent",
+    hover_color="#333333",
+    command=ventana_codigo_verificacion
+)
+key_button.image = key_photo  # evitar que se pierda referencia
+key_button.place(relx=1.0, x=-20, y=10, anchor="ne")  # esquina superior derecha con margen
+
+# Ícono de conexión a internet
+internet_icon_path = os.path.join(os.path.dirname(__file__), "images", "con-internet.png" if hay_internet() else "sin-internet.png")
+internet_icon_img = Image.open(internet_icon_path).resize((25, 25), resample=Image.LANCZOS)
+internet_photo = ctk.CTkImage(light_image=internet_icon_img)
+
+internet_label = ctk.CTkLabel(
+    header_frame,
+    image=internet_photo,
+    text=""
+)
+internet_label.image = internet_photo
+internet_label.place(relx=1.0, x=-60, y=7, anchor="ne")  # al lado izquierdo del botón llave
+
+
 
 ventana.mainloop()
