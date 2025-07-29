@@ -1,32 +1,37 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Dashboard de Claves</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6">
-  <div class="max-w-3xl mx-auto">
-    <h1 class="text-2xl font-bold mb-4 text-center">🔐 Generador de Claves</h1>
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-center">🔐 Generador de Claves</h1>
 
-    <div class="flex gap-2 mb-4">
-      <input type="text" id="nombreInput" placeholder="Nombre del cliente" class="flex-1 p-2 rounded border">
-      <button onclick="generarClave()" class="bg-blue-600 text-white px-4 py-2 rounded">Generar clave</button>
+    <div class="flex gap-2 mb-6 flex-wrap">
+      <input type="text" id="nombreInput" placeholder="Nombre del cliente" class="flex-grow p-2 rounded border" required />
+      <input type="email" id="gmailInput" placeholder="Gmail" class="flex-grow p-2 rounded border" required />
+      <input type="tel" id="phoneInput" placeholder="Número teléfono" class="flex-grow p-2 rounded border" required />
+      <button onclick="generarClave()" class="bg-blue-600 text-white px-6 py-2 rounded whitespace-nowrap">Generar clave</button>
     </div>
 
-    <div id="mensaje" class="text-green-600 mb-2"></div>
+    <div id="mensaje" class="text-green-600 mb-4 font-semibold"></div>
 
-    <table class="w-full bg-white shadow rounded">
+    <table class="w-full bg-white shadow rounded overflow-hidden">
       <thead>
         <tr class="bg-gray-200 text-left">
-          <th class="p-2">Nombre</th>
-          <th class="p-2">Clave</th>
-          <th class="p-2">Usos</th>
-          <th class="p-2">Acciones</th>
+          <th class="p-3 border-b">Nombre</th>
+          <th class="p-3 border-b">Gmail</th>
+          <th class="p-3 border-b">Teléfono</th>
+          <th class="p-3 border-b">Clave</th>
+          <th class="p-3 border-b text-center">Usos</th>
+          <th class="p-3 border-b text-center">Activada</th>
+          <th class="p-3 border-b text-center">Acciones</th>
         </tr>
       </thead>
-      <tbody id="tablaClaves">
-        <!-- Aquí se insertarán dinámicamente -->
+      <tbody id="tablaClaves" class="divide-y divide-gray-200">
+        <!-- Claves se cargarán aquí -->
       </tbody>
     </table>
   </div>
@@ -34,4 +39,3 @@
   <script src="/static/scripts.js"></script>
 </body>
 </html>
-

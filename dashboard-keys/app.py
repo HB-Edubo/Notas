@@ -18,10 +18,15 @@ def index():
 def generate_key():
     data = request.json
     name = data.get('name')
+    gmail = data.get('gmail')
+    phone = data.get('phone')
     key = str(uuid.uuid4())[:8]  # Clave corta
     db.collection('keys').document(key).set({
         'name': name,
-        'uses': 10  # usos por defecto
+        'gmail': gmail,
+        'phone': phone,
+        'uses': 10,  # usos por defecto
+        'activated': False
     })
     return jsonify({'success': True, 'key': key})
 
@@ -33,8 +38,11 @@ def get_keys():
         data = doc.to_dict()
         keys.append({
             'key': doc.id,
-            'name': data['name'],
-            'uses': data['uses']
+            'name': data.get('name'),
+            'gmail': data.get('gmail'),
+            'phone': data.get('phone'),
+            'uses': data.get('uses'),
+            'activated': data.get('activated')
         })
     return jsonify(keys)
 
@@ -43,9 +51,10 @@ def update_uses():
     data = request.json
     key = data.get('key')
     new_uses = data.get('uses')
+    if new_uses < 0:
+        new_uses = 0
     db.collection('keys').document(key).update({'uses': new_uses})
     return jsonify({'success': True})
 
 if __name__ == '__main__':
     app.run(debug=True)
-
