@@ -99,7 +99,6 @@ def ventana_codigo_verificacion(ventana, db, btn1, btn2, btn3):
 
             doc_ref.update({
                 "activated": True,
-                "uses": uses - 1
             })
 
             resultado_label.configure(text="✅ Usuario aceptado", text_color="green")

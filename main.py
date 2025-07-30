@@ -95,7 +95,8 @@ def accion_llenar_formulario():
             set_input("TXTF1", faltas)
 
             progressbar.set(0.66 + 0.34 * ((idx + 1) / total))
-
+            
+        descontar_uso_key_activada()
         messagebox.showinfo("Éxito", "Todos los datos fueron ingresados.")
         progressbar.set(1.0)
     except Exception as e:
@@ -115,6 +116,24 @@ def verificar_conexion_periodica():
         btn3.configure(state="disabled", fg_color="#999999", hover_color="#999999")
 
     ventana.after(5000, verificar_conexion_periodica)
+
+def descontar_uso_key_activada():
+    try:
+        keys_ref = db.collection("keys").where("activated", "==", True).limit(1).stream()
+        for key_doc in keys_ref:
+            doc_ref = db.collection("keys").document(key_doc.id)
+            data = key_doc.to_dict()
+            usos_restantes = data.get("uses", 0)
+
+            if usos_restantes > 0:
+                doc_ref.update({"uses": usos_restantes - 1})
+                print(f"✅ Se descontó un uso. Restantes: {usos_restantes - 1}")
+            else:
+                print("⚠️ La key ya no tiene usos disponibles.")
+            break
+    except Exception as e:
+        print("Error al descontar uso:", e)
+
 
 # Interfaz principal
 ventana = ctk.CTk()
