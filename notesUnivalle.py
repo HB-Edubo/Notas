@@ -13,6 +13,8 @@ from firebase_admin import credentials, firestore
 import socket
 from PIL import Image
 
+key_validated = False  # estado global de la key
+
 # Configuración global de CustomTkinter
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
@@ -229,23 +231,49 @@ def ventana_codigo_verificacion():
 
     # Función verificar
     def verificar_codigo():
+        global key_validated
         codigo = ''.join(entry.get() for entry in entries).strip()
         if len(codigo) != 8:
             resultado_label.configure(text="Debe ingresar los 8 dígitos", text_color="red")
             return
+
         try:
             doc_ref = db.collection("keys").document(codigo)
             doc = doc_ref.get()
-            if doc.exists:
-                # Actualizar el campo "activated" a True
-                doc_ref.update({"activated": True})
-                resultado_label.configure(text="✅ Usuario aceptado", text_color="green")
 
-                # Cambiar imagen a candado abierto
-                icon_label.configure(image=open_icon)
-                icon_label.image = open_icon  # actualizar referencia
-            else:
+            if not doc.exists:
                 resultado_label.configure(text="❌ Código no válido", text_color="red")
+                return
+
+            data = doc.to_dict()
+            activated = data.get("activated", False)
+            uses = data.get("uses", 0)
+
+            if activated:
+                resultado_label.configure(text="❌ Código ya fue activado", text_color="red")
+                return
+
+            if uses <= 0:
+                resultado_label.configure(text="❌ Código sin usos disponibles", text_color="red")
+                return
+
+            # ✅ Si pasa todas las validaciones
+            doc_ref.update({
+                "activated": True,
+                "uses": uses - 1
+            })
+
+            resultado_label.configure(text="✅ Usuario aceptado", text_color="green")
+            icon_label.configure(image=open_icon)
+            icon_label.image = open_icon
+
+            key_validated = True
+
+            # Habilitar botones principales
+            btn1.configure(state="normal")
+            btn2.configure(state="normal")
+            btn3.configure(state="normal")
+
         except Exception as e:
             resultado_label.configure(text=f"Error: {e}", text_color="red")
 
@@ -362,6 +390,10 @@ btn3 = ctk.CTkButton(
     command=llenar_formulario
 )
 btn3.grid(row=3, column=0, pady=10)
+
+btn1.configure(state="disabled")
+btn2.configure(state="disabled")
+btn3.configure(state="disabled")
 
 action_frame = ctk.CTkFrame(ventana, fg_color="#cc0605")
 action_frame.pack(fill="x", side="bottom", pady=(2, 5))
