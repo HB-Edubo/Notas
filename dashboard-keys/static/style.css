@@ -1,0 +1,19 @@
+body {
+  background-color: #cc0605;
+  color: #ffffff;
+}
+  .editable-input {
+      background: transparent;
+      border: none;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+      color: inherit;
+      font: inherit;
+      text-align: center;
+    }
+    .confirm-btn {
+      margin-left: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
