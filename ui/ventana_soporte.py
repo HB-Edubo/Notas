@@ -4,7 +4,7 @@ import os
 import webbrowser
 from urllib.parse import quote
 
-def ventana_soporte(ventana, nombre_usuario):
+def ventana_soporte(ventana, nombre_usuario, gmail_usuario):
     ventana_soporte = ctk.CTkToplevel()
     ventana_soporte.title("Soporte Técnico")
     ventana_soporte.geometry("300x300")  # ⬅️ tamaño fijo
@@ -44,7 +44,7 @@ def ventana_soporte(ventana, nombre_usuario):
     # Botón WhatsApp
     def abrir_whatsapp():
         numero = "59163851280"
-        mensaje = f"Hola, soy {nombre_usuario} y solicito una nueva llave de acceso."
+        mensaje = f"Hola, soy {nombre_usuario} y mi email es {gmail_usuario}. Solicito una nueva llave de acceso."
         url = f"https://wa.me/{numero}?text={quote(mensaje)}"
         webbrowser.open(url)
 

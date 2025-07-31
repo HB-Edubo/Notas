@@ -11,7 +11,7 @@ from utils.excel_utils import seleccionar_excel, cargar_datos_excel
 from utils.chrome_utils import abrir_chrome, conectar_driver
 from ui.verificacion_key import ventana_codigo_verificacion
 from ui.ventana_soporte import ventana_soporte
-
+from utils.session import cargar_estado_sesion
 
 import time
 from selenium.webdriver.common.by import By
@@ -33,6 +33,8 @@ db = initialize_firebase()
 
 # Variables globales
 excel_path = None
+nombre_usuario_global = "Usuario"
+gmail_usuario_global = ""
 
 # Funciones
 def accion_abrir_chrome():
@@ -163,6 +165,31 @@ ctk.CTkLabel(
     font=("Helvetica", 20, "bold")
 ).place(relx=0.5, rely=0.6, anchor="center")
 
+#Datos de usuario
+def set_nombre_usuario(nombre, gmail=""):
+    global nombre_usuario_global, gmail_usuario_global
+    nombre_usuario_global = nombre
+    gmail_usuario_global = gmail
+
+    # Elimina saludos anteriores
+    for widget in header_frame.winfo_children():
+        if isinstance(widget, ctk.CTkLabel) and "Bienvenido" in widget.cget("text"):
+            widget.destroy()
+
+    saludo_label = ctk.CTkLabel(
+        header_frame,
+        text=f"👤 ¡Bienvenido {nombre}!",
+        text_color="#ffffff",
+        font=("Helvetica", 14)
+    )
+    saludo_label.place(x=90, y=12)
+
+
+datos_sesion = cargar_estado_sesion()
+if datos_sesion and "name" in datos_sesion:
+    ventana.set_nombre_usuario = set_nombre_usuario  # Enlaza la función con la ventana
+    set_nombre_usuario(datos_sesion["name"], datos_sesion.get("gmail", ""))
+
 # Body
 body_frame = ctk.CTkFrame(ventana, fg_color="#cc0605")
 body_frame.pack(expand=True, fill="both", padx=20, pady=(20, 10))
@@ -232,12 +259,11 @@ extra_button = ctk.CTkButton(
     height=25,
     fg_color="transparent",
     hover_color="#333333",
-    command=lambda: ventana_soporte(ventana, "Anthony Echeverría")
+    command=lambda: ventana_soporte(ventana, nombre_usuario_global, gmail_usuario_global)
 )
 
 extra_button.image = extra_photo
 extra_button.place(relx=1.0, x=-90, y=7, anchor="ne")
-
 
 # Ícono conexión
 internet_icon_path = os.path.join("images", "con-internet.png" if hay_internet() else "sin-internet.png")

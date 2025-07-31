@@ -5,7 +5,7 @@ from utils.session import guardar_estado_sesion
 
 def ventana_codigo_verificacion(ventana, db, btn1, btn2, btn3):
     ventana_pin = ctk.CTkToplevel()
-    ventana_pin.title("Código de Verificación")
+    ventana_pin.title("Iniciar sesión con código")
     ventana_pin.geometry("380x300")
     ventana_pin.resizable(False, False)
     ventana_pin.configure(fg_color="#ffffff")
@@ -34,7 +34,7 @@ def ventana_codigo_verificacion(ventana, db, btn1, btn2, btn3):
     titulo = ctk.CTkLabel(ventana_pin, text="Código de verificación", text_color="#000000", font=("Helvetica", 20, "bold"))
     titulo.pack()
 
-    subtitulo = ctk.CTkLabel(ventana_pin, text="Por favor ingresa el código de 8 dígitos", text_color="#555555", font=("Helvetica", 14))
+    subtitulo = ctk.CTkLabel(ventana_pin, text="Ingresa tu código de 8 dígitos para iniciar sesión", text_color="#555555", font=("Helvetica", 14))
     subtitulo.pack(pady=(0, 10))
 
     entry_frame = ctk.CTkFrame(ventana_pin, fg_color="transparent")
@@ -89,19 +89,16 @@ def ventana_codigo_verificacion(ventana, db, btn1, btn2, btn3):
             activated = data.get("activated", False)
             uses = data.get("uses", 0)
 
-            if activated:
-                resultado_label.configure(text="❌ Código ya fue activado", text_color="red")
-                return
-
             if uses <= 0:
                 resultado_label.configure(text="❌ Código sin usos disponibles", text_color="red")
                 return
 
-            doc_ref.update({
-                "activated": True,
-            })
+            # Activar solo si es la primera vez
+            if not activated:
+                doc_ref.update({"activated": True})
 
-            resultado_label.configure(text="✅ Usuario aceptado", text_color="green")
+            # Inicio de sesión exitoso
+            resultado_label.configure(text="✅ Sesión iniciada correctamente", text_color="green")
             icon_label.configure(image=open_icon)
             icon_label.image = open_icon
 
@@ -109,14 +106,31 @@ def ventana_codigo_verificacion(ventana, db, btn1, btn2, btn3):
             btn2.configure(state="normal")
             btn3.configure(state="normal")
 
+            name = data.get("name", "Usuario")
+            gmail = data.get("gmail", "")
+
+            # Mostrar nombre en ventana principal
+            nombre_label = ctk.CTkLabel(
+                ventana, 
+                text=f"👋 Bienvenido, {name}", 
+                text_color="#000000", 
+                font=("Helvetica", 16, "bold")
+            )
+            nombre_label.pack(pady=10)
+
+            guardar_estado_sesion(codigo, name, gmail)
+
+            # Refrescar nombre en ventana principal si está definido
+            if hasattr(ventana, "set_nombre_usuario"):
+                ventana.set_nombre_usuario(name, gmail)
+
+
         except Exception as e:
             resultado_label.configure(text=f"Error: {e}", text_color="red")
 
-    guardar_estado_sesion()
-    
     btn_verificar = ctk.CTkButton(
         ventana_pin,
-        text="VERIFY",
+        text="INICIAR SESIÓN",
         font=("Helvetica", 14, "bold"),
         fg_color="#cc0605",
         hover_color="#a00404",
