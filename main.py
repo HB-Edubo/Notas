@@ -2,12 +2,16 @@ import customtkinter as ctk
 from PIL import Image, ImageTk
 import os
 from tkinter import messagebox
+from urllib.parse import quote
+
 
 from firebase_config import initialize_firebase
 from utils.internet import hay_internet
 from utils.excel_utils import seleccionar_excel, cargar_datos_excel
 from utils.chrome_utils import abrir_chrome, conectar_driver
 from ui.verificacion_key import ventana_codigo_verificacion
+from ui.ventana_soporte import ventana_soporte
+
 
 import time
 from selenium.webdriver.common.by import By
@@ -214,6 +218,26 @@ key_button = ctk.CTkButton(header_frame, image=key_photo, text="", width=25, hei
                            command=lambda: ventana_codigo_verificacion(ventana, db, btn1, btn2, btn3))
 key_button.image = key_photo
 key_button.place(relx=1.0, x=-20, y=10, anchor="ne")
+
+# Ícono adicional 
+extra_icon_path = os.path.join("images", "Medium.png")  # Asegúrate de tener este ícono en la carpeta images
+extra_icon_img = Image.open(extra_icon_path).resize((50, 30), resample=Image.LANCZOS)
+extra_photo = ctk.CTkImage(light_image=extra_icon_img)
+
+extra_button = ctk.CTkButton(
+    header_frame,
+    image=extra_photo,
+    text="",
+    width=25,
+    height=25,
+    fg_color="transparent",
+    hover_color="#333333",
+    command=lambda: ventana_soporte(ventana, "Anthony Echeverría")
+)
+
+extra_button.image = extra_photo
+extra_button.place(relx=1.0, x=-90, y=7, anchor="ne")
+
 
 # Ícono conexión
 internet_icon_path = os.path.join("images", "con-internet.png" if hay_internet() else "sin-internet.png")
