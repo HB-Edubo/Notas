@@ -325,7 +325,7 @@ header_frame = ctk.CTkFrame(ventana, fg_color="#1d1d1b", height=100, corner_radi
 header_frame.pack(fill="x", side="top")
 
 logo_path = os.path.join(os.path.dirname(__file__), "edubo.png")
-logo_img = Image.open(logo_path).resize((70, 20), resample=Image.LANCZOS)
+logo_img = Image.open(logo_path).resize((80, 16), resample=Image.LANCZOS)
 logo = ImageTk.PhotoImage(logo_img)
 logo_label = ctk.CTkLabel(header_frame, image=logo, text="")
 logo_label.place(x=10, y=10)
